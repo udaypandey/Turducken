@@ -20,7 +20,9 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "FanMaker",
-            dependencies: []),
+            dependencies: [],
+            sources: ["FanMakerSDK.swift", "FanMakerSDKWebView.swift", "FanMakerSDKLocationDelegate.swift", "FanMakerSDKWebViewController.swift", "Http", "Http/Resources"]
+        ),
         .testTarget(
             name: "FanMakerTests",
             dependencies: ["FanMaker"]),

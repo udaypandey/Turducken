@@ -2,10 +2,17 @@
     @testable import FanMaker
 
     final class FanMakerTests: XCTestCase {
-        func testExample() {
-            // This is an example of a functional test case.
-            // Use XCTAssert and related functions to verify your tests produce the correct
-            // results.
-            XCTAssertEqual(FanMaker().text, "Hello, World!")
+        func testFanMakerSiteDetails() {
+            let json : String = "{\"status\": 200, \"message\": \"Success\", \"data\": { \"canonical_url\": \"example_url\" }}"
+            let data = json.data(using: .utf8)
+            let decoder = JSONDecoder()
+            
+            do {
+                let httpResponse : FanMakerSDKSiteDetailsResponse = try decoder.decode(FanMakerSDKSiteDetailsResponse.self, from: data!)
+                XCTAssertEqual(httpResponse.data.canonical_url, "example_url")
+            } catch let(error) {
+                XCTAssertEqual(error.localizedDescription, "NO ERROR")
+            }
+            
         }
     }
