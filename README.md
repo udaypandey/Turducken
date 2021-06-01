@@ -10,6 +10,9 @@ First of all, you need to contact FanMaker in order to get and `<SDK_KEY>`. This
 
 Then, you need to add the FanMaker SDK to your project as a Swift Package:
 
+![Captura de Pantalla 2021-06-01 a la(s) 10 54 06](https://user-images.githubusercontent.com/298020/120363801-2f743e00-c2d2-11eb-89fb-3fd273072d16.png)
+
+![Captura de Pantalla 2021-06-01 a la(s) 12 09 52](https://user-images.githubusercontent.com/298020/120363926-4c107600-c2d2-11eb-8374-0b7e9cfc21a4.png)
 
 ### Initialization
 
