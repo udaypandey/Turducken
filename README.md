@@ -2,25 +2,23 @@
 
 ## About
 
-The FanMaker Swift SDK provides iOS developers with a way of inserting an iOS View displaying their own FanMaker's Program. This view can be displayed as part of a navigation stack, as well as a modal or even a subview into your app's layout.
+The FanMaker Swift SDK provides iOS developers with a way of inserting the FanMaker UI in another app. The view can be displayed as part of a navigation stack, a modal or even a subview in an app's layout.
 
 ## Usage
 
-First of all, you need to contact FanMaker in order to get and `<SDK_KEY>`. This key is linked to your FanMaker program and it's used to initialize the SDK so it can display your very own FanMaker content.
+First add the FanMaker SDK to your project as a Swift Package:
 
-Then, you need to add the FanMaker SDK to your project as a Swift Package:
+![xcode1](https://user-images.githubusercontent.com/298020/120363801-2f743e00-c2d2-11eb-89fb-3fd273072d16.png)
 
-![Captura de Pantalla 2021-06-01 a la(s) 10 54 06](https://user-images.githubusercontent.com/298020/120363801-2f743e00-c2d2-11eb-89fb-3fd273072d16.png)
-
-![Captura de Pantalla 2021-06-01 a la(s) 12 09 52](https://user-images.githubusercontent.com/298020/120363926-4c107600-c2d2-11eb-8374-0b7e9cfc21a4.png)
+![xcode2](https://user-images.githubusercontent.com/298020/120363926-4c107600-c2d2-11eb-8374-0b7e9cfc21a4.png)
 
 ### Initialization
 
-To initialize the SDK you need to pass your `<SDK_KEY>` into the FanMaker SDK initializer. You need to call this code in your `AppDelegate` class as part of your `application didFinishLaunchingWithOptions` callback function. Things are a little different depending on what "Life Cycle" are you using.
+To initialize the SDK you need to pass your `<SDK_KEY>` into the FanMaker SDK initializer. You need to call this code in your `AppDelegate` class as part of your `application didFinishLaunchingWithOptions` callback function. Configuration is a little different depending on what "Life Cycle" are you using.
 
 #### For UIKit
 
-If you're using `UIKit` then you should already have and `AppDelegate` class living in `AppDelegate.swift`, so you just need to add FanMaker SDK initialization code to that file under the right callback function:
+If you are using `UIKit` then you should already have and `AppDelegate` class living in `AppDelegate.swift`, so you just need to add FanMaker SDK initialization code to that file under the right callback function:
 
 ```
 import UIKit
@@ -76,7 +74,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 }
 ```
 
-and then you need to add the `AppDelegate` class to your `@main` file:
+and then add the `AppDelegate` class to your `@main` file:
 
 ```
 // MyApp.swift
@@ -98,7 +96,7 @@ struct MyApp: App {
 
 ### Displaying FanMaker UI
 
-In order to show FanMaker UI in your app, you need to create an instance of `FanMakerSDKWebViewController` and use it's `view` property as you find convenient. `FanMakerSDKWebViewController`'s `view` property complies with `UIViewRepresentable` protocol so it can be used in any way covered by that protocol. For example, the following code is used to show it as a sheet modal when users press a button:
+In order to show FanMaker UI in your app, create an instance of `FanMakerSDKWebViewController` and use it's `view` property as you find convenient. `FanMakerSDKWebViewController`'s `view` property complies with `UIViewRepresentable` protocol so it can be used in any way covered by that protocol. For example, the following code is used to show it as a sheet modal when users press a button (which we recomend):
 
 ```
 import SwiftUI
