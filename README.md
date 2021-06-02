@@ -117,4 +117,38 @@ struct ContentView : View {
             }
     }
 }
-``
+```
+
+### Passing Custom Identifiers
+
+FanMaker UI usually requires users to input their FanMaker's Credentials. However, you can make use of up to four different custom identifiers to allow a given user to automatically login when they first open FanMaker UI.
+
+```
+import SwiftUI
+import FanMaker
+
+struct ContentView : View {
+    @State private var isShowingFanMakerUI : Bool = false
+    
+    var body : some View {
+        // FanMakerUI initialization
+        let fanMakerUI = FanMakerSDKWebViewController()
+        
+        Button("Show FanMaker UI", action: {
+            // **Note**: Identifiers availability depends on your FanMaker program.
+            FanMakerSDK.setMemberID("<memberid>")
+            FanMakerSDK.setStudentId("<studentid>")
+            FanMakerSDK.setTicketmasterID("<ticketmasterid>")
+            FanMakerSDK.setYinzid("<yinzid>")
+
+            // Make sure to setup any custom identifier before actually displaying the FanMaker UI
+            isShowingFanMakerUI = true
+        })
+            .sheet(isPresented: $isShowingFanMakerUI) {
+                // FanMakerUI Display
+                fanMakerUI.view
+                Button("Hide FanMakerUI", action: { isShowingFanMakerUI = false })
+            }
+    }
+}
+```

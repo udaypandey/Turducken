@@ -48,7 +48,13 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         }
         
         let url : URL? = URL(string: urlString)
-        let request : URLRequest = URLRequest(url: url!)
+        var request : URLRequest = URLRequest(url: url!)
+        request.setValue(FanMakerSDK.apiKey, forHTTPHeaderField: "X-FanMaker-Token")
+        request.setValue(FanMakerSDK.memberID, forHTTPHeaderField: "X-Member-ID")
+        request.setValue(FanMakerSDK.studentID, forHTTPHeaderField: "X-Student-ID")
+        request.setValue(FanMakerSDK.ticketmasterID, forHTTPHeaderField: "X-Ticketmaster-ID")
+        request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
+        
         webView.load(request)
         
         return self.webView
