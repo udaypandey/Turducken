@@ -18,10 +18,7 @@ class FanMakerSDKLocationDelegate : NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("locationManager didUpdateLocations")
         if let location = locations.first {
-            print(location.coordinate.latitude)
-            print(location.coordinate.longitude)
             self.lat = location.coordinate.latitude
             self.lng = location.coordinate.longitude
         }

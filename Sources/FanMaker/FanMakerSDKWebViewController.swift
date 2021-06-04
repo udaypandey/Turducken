@@ -6,24 +6,27 @@
 //
 
 import Foundation
-import WebKit
 import CoreLocation
+import WebKit
+import SwiftUI
 
-@available(iOS 14.0, *)
-public class FanMakerSDKWebViewController : NSObject, WKScriptMessageHandler {
-    public var view : FanMakerSDKWebView? = nil
+@available(iOS 13.0, *)
+public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHandler {
+    public var fanmaker : FanMakerSDKWebView? = nil
     private let locationManager : CLLocationManager = CLLocationManager()
     private let locationDelegate : FanMakerSDKLocationDelegate = FanMakerSDKLocationDelegate()
     
-    public override init() {
-        super.init()
+    public override func viewDidLoad() {
+        super.viewDidLoad()
         
         let userController : WKUserContentController = WKUserContentController()
         userController.add(self, name: "fanmaker")
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userController
         
-        self.view = FanMakerSDKWebView(configuration: configuration)
+        self.fanmaker = FanMakerSDKWebView(configuration: configuration)
+        self.fanmaker?.prepareUIView()
+        self.view = self.fanmaker!.webView
     }
     
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -39,12 +42,20 @@ public class FanMakerSDKWebViewController : NSObject, WKScriptMessageHandler {
                     locationManager.delegate = locationDelegate
                     locationManager.requestLocation()
                 case "updateLocation":
-                    if CLLocationManager.locationServicesEnabled() {
-                        switch locationManager.authorizationStatus {
+                    if FanMakerSDK.locationEnabled && CLLocationManager.locationServicesEnabled() {
+                        var authorizationStatus : CLAuthorizationStatus
+                        if #available(iOS 14.0, *) {
+                            authorizationStatus = locationManager.authorizationStatus
+                        } else {
+                            authorizationStatus = CLLocationManager.authorizationStatus()
+                        }
+                        
+                        switch authorizationStatus {
                         case .notDetermined, .restricted, .denied:
                             print("Access Denied")
+                            fanmaker!.webView.evaluateJavaScript("denyLocation()")
                         case .authorizedAlways, .authorizedWhenInUse:
-                            view!.webView.evaluateJavaScript("receiveLocation(\(locationDelegate.coords()))")
+                            fanmaker!.webView.evaluateJavaScript("receiveLocation(\(locationDelegate.coords()))")
                         @unknown default:
                             print("Unknown error")
                         }
@@ -58,3 +69,17 @@ public class FanMakerSDKWebViewController : NSObject, WKScriptMessageHandler {
         }
     }
 }
+
+@available(iOS 13.0, *)
+public struct FanMakerSDKWebViewControllerRepresentable : UIViewControllerRepresentable {
+    public init() {}
+
+    public func makeUIViewController(context: Context) -> some UIViewController {
+        return FanMakerSDKWebViewController()
+    }
+    
+    public func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        
+    }
+}
+

@@ -96,7 +96,9 @@ struct MyApp: App {
 
 ### Displaying FanMaker UI
 
-In order to show FanMaker UI in your app, create an instance of `FanMakerSDKWebViewController` and use it's `view` property as you find convenient. `FanMakerSDKWebViewController`'s `view` property complies with `UIViewRepresentable` protocol so it can be used in any way covered by that protocol. For example, the following code is used to show it as a sheet modal when users press a button (which we recomend):
+In order to show FanMaker UI in your app, create an instance of `FanMakerSDKWebViewController` (`UIViewController` subclass) and use it as you find convenient.
+
+FanMaker SDK also provides a `FanMakerSDKWebViewControllerRepresentable` wrapper which complies with `UIViewControllerRepresentable` protocol. For example, the following code is used to show it as a sheet modal when users press a button (which we recomend):
 
 ```
 import SwiftUI
@@ -106,13 +108,10 @@ struct ContentView : View {
     @State private var isShowingFanMakerUI : Bool = false
     
     var body : some View {
-        // FanMakerUI initialization
-        let fanMakerUI = FanMakerSDKWebViewController()
-        
         Button("Show FanMaker UI", action: { isShowingFanMakerUI = true })
             .sheet(isPresented: $isShowingFanMakerUI) {
                 // FanMakerUI Display
-                fanMakerUI.view
+                FanMakerSDKWebViewControllerRepresentable()
                 Button("Hide FanMakerUI", action: { isShowingFanMakerUI = false })
             }
     }
@@ -151,4 +150,16 @@ struct ContentView : View {
             }
     }
 }
+```
+
+### Location Tracking
+
+FanMaker UI asks for user's permission to track their location the first time it loads. However, location tracking can be enabled/disabled by calling the following static functions:
+
+```
+// To manually disable location tracking
+FanMakerSDK.disableLocationTracking()
+
+// To manually enable location tracking back
+FanMakerSDK.enableLocationTracking()
 ```

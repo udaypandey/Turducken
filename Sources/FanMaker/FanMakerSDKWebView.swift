@@ -16,7 +16,7 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
     public var webView : WKWebView
     private var urlString : String = ""
 
-    init(configuration: WKWebViewConfiguration) {
+    public init(configuration: WKWebViewConfiguration) {
         self.webView = WKWebView(frame: .zero, configuration: configuration)
         
         let path = "site_details/info"
@@ -40,7 +40,7 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         self.urlString = urlString
     }
     
-    public func makeUIView(context: Context) -> some UIView {
+    public func prepareUIView() {
         let defaults : UserDefaults = UserDefaults.standard
         var urlString = self.urlString
         if let token = defaults.string(forKey: FanMakerSDKSessionToken) {
@@ -55,8 +55,11 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.ticketmasterID, forHTTPHeaderField: "X-Ticketmaster-ID")
         request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
         
-        webView.load(request)
-        
+        self.webView.load(request)
+    }
+    
+    public func makeUIView(context: Context) -> some UIView {
+        prepareUIView()
         return self.webView
     }
     

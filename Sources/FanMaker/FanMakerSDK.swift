@@ -6,9 +6,11 @@ public class FanMakerSDK {
     public static var studentID : String = ""
     public static var ticketmasterID : String = ""
     public static var yinzid : String = ""
+    public static var locationEnabled : Bool = false
     
     public static func initialize(apiKey : String) {
         self.apiKey = apiKey
+        self.locationEnabled = false
     }
     
     public static func isInitialized() -> Bool {
@@ -29,5 +31,13 @@ public class FanMakerSDK {
     
     public static func setYinzid(_ value : String) {
         self.yinzid = value
+    }
+    
+    public static func enableLocationTracking() {
+        self.locationEnabled = true
+    }
+    
+    public static func disableLocationTracking() {
+        self.locationEnabled = false
     }
 }
