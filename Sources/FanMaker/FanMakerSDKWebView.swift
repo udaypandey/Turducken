@@ -54,6 +54,7 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.studentID, forHTTPHeaderField: "X-Student-ID")
         request.setValue(FanMakerSDK.ticketmasterID, forHTTPHeaderField: "X-Ticketmaster-ID")
         request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
+        request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
         
         self.webView.load(request)
     }

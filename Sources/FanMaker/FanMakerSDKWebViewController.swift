@@ -53,7 +53,7 @@ public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHan
                         switch authorizationStatus {
                         case .notDetermined, .restricted, .denied:
                             print("Access Denied")
-                            fanmaker!.webView.evaluateJavaScript("denyLocation()")
+                            fanmaker!.webView.evaluateJavaScript("receiveLocationAuthorization(false)")
                         case .authorizedAlways, .authorizedWhenInUse:
                             fanmaker!.webView.evaluateJavaScript("receiveLocation(\(locationDelegate.coords()))")
                         @unknown default:
