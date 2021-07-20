@@ -139,6 +139,10 @@ struct ContentView : View {
             FanMakerSDK.setStudentId("<studentid>")
             FanMakerSDK.setTicketmasterID("<ticketmasterid>")
             FanMakerSDK.setYinzid("<yinzid>")
+            FanMakerSDK.setPushNotificationToken("<pushToken>")
+            
+            // Enable Location Tracking (Permissions should be previously asked by your app)
+            FanMakerSDK.enableLocationTracking()
 
             // Make sure to setup any custom identifier before actually displaying the FanMaker UI
             isShowingFanMakerUI = true
