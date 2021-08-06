@@ -41,20 +41,21 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
     }
     
     public func prepareUIView() {
-        let defaults : UserDefaults = UserDefaults.standard
-        var urlString = self.urlString
-        if let token = defaults.string(forKey: FanMakerSDKSessionToken) {
-            urlString += "?token=\(token.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? "")"
-        }
-        
-        let url : URL? = URL(string: urlString)
+        let url : URL? = URL(string: self.urlString)
         var request : URLRequest = URLRequest(url: url!)
+        let defaults : UserDefaults = UserDefaults.standard
+        if let token = defaults.string(forKey: FanMakerSDKSessionToken) {
+            request.setValue(token, forHTTPHeaderField: "X-FanMaker-SessionToken")
+        }
         request.setValue(FanMakerSDK.apiKey, forHTTPHeaderField: "X-FanMaker-Token")
         request.setValue(FanMakerSDK.memberID, forHTTPHeaderField: "X-Member-ID")
         request.setValue(FanMakerSDK.studentID, forHTTPHeaderField: "X-Student-ID")
         request.setValue(FanMakerSDK.ticketmasterID, forHTTPHeaderField: "X-Ticketmaster-ID")
         request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
         request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
+        
+        // SDK Exclusive Token
+        request.setValue("0.1.5", forHTTPHeaderField: "X-FanMaker-SDK-Version")
         
         self.webView.load(request)
     }
