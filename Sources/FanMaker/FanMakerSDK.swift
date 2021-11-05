@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 public class FanMakerSDK {
     public static var apiKey : String = ""
@@ -8,6 +9,8 @@ public class FanMakerSDK {
     public static var yinzid : String = ""
     public static var pushToken : String = ""
     public static var locationEnabled : Bool = false
+    public static var loadingBackgroundColor : UIColor = UIColor.white
+    public static var loadingForegroundImage : UIImage? = nil
     
     public static func initialize(apiKey : String) {
         self.apiKey = apiKey
@@ -44,5 +47,13 @@ public class FanMakerSDK {
     
     public static func disableLocationTracking() {
         self.locationEnabled = false
+    }
+    
+    public static func setLoadingBackgroundColor(_ bgColor : UIColor) {
+        self.loadingBackgroundColor = bgColor
+    }
+    
+    public static func setLoadingForegroundImage(_ fgImage : UIImage) {
+        self.loadingForegroundImage = fgImage
     }
 }

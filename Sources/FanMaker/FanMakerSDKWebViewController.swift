@@ -11,7 +11,7 @@ import WebKit
 import SwiftUI
 
 @available(iOS 13.0, *)
-public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHandler {
+public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHandler, WKNavigationDelegate {
     public var fanmaker : FanMakerSDKWebView? = nil
     private let locationManager : CLLocationManager = CLLocationManager()
     private let locationDelegate : FanMakerSDKLocationDelegate = FanMakerSDKLocationDelegate()
@@ -26,6 +26,35 @@ public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHan
         
         self.fanmaker = FanMakerSDKWebView(configuration: configuration)
         self.fanmaker?.prepareUIView()
+        self.fanmaker?.webView.navigationDelegate = self
+        
+        self.view = UIView(frame: self.view!.bounds)
+        self.view.backgroundColor = FanMakerSDK.loadingBackgroundColor
+        
+        let bounds = self.view!.bounds
+        let x = bounds.width / 4
+        let y = bounds.height / 2 - x * 3 / 2
+        
+        let loadingAnimation = UIImageView(frame: CGRect(x: x, y: y, width: 2 * x, height: 2 * x))
+        
+        if let fgImage = FanMakerSDK.loadingForegroundImage {
+            loadingAnimation.image = fgImage
+        } else {
+            var images : [UIImage] = []
+            for index in 0...29 {
+                if let path = Bundle.module.path(forResource: "fanmaker-sdk-loading-\(index)", ofType: "png") {
+                    if let image = UIImage(contentsOfFile: path) {
+                        images.append(image)
+                    }
+                }
+            }
+            loadingAnimation.image = UIImage.animatedImage(with: images, duration: 1.0)
+        }
+        
+        self.view.addSubview(loadingAnimation)
+    }
+    
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation) {
         self.view = self.fanmaker!.webView
     }
     

@@ -24,7 +24,10 @@ let package = Package(
         .target(
             name: "FanMaker",
             dependencies: [],
-            sources: ["FanMakerSDK.swift", "FanMakerSDKWebView.swift", "FanMakerSDKLocationDelegate.swift", "FanMakerSDKWebViewController.swift", "Http", "Http/Resources"]
+            sources: ["FanMakerSDK.swift", "FanMakerSDKWebView.swift", "FanMakerSDKLocationDelegate.swift", "FanMakerSDKWebViewController.swift", "Http", "Http/Resources"],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "FanMakerTests",
