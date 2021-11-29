@@ -118,6 +118,19 @@ struct ContentView : View {
 }
 ```
 
+#### Personalization options
+
+When you present the `FanMakerSDKWebViewController` instance it will take a couple of seconds to load the content to display to the user. In the meanwhile, a white screen with a loading animation will show to indicate the user the UI is actually loading.
+
+You can personalize both the loading screen's background color and loading animation by calling the following methods before presenting the `FanMakerSDKWebViewController`. The prefered place to call these functions is right after calling `FanMakerSDK.initialize` 
+
+```
+FanMakerSDK.setLoadingBackgroundColor(_ bgColor : UIColor)
+FanMakerSDK.setLoadingForegroundImage(_ fgImage : UIImage)
+```
+
+**Note**: `FanMakerSDK.setLoadingForegroundImage(_ fgImage : UIImage)` can take both a static or an animated `UIImage` as an argument.
+
 ### Passing Custom Identifiers
 
 FanMaker UI usually requires users to input their FanMaker's Credentials. However, you can make use of up to four different custom identifiers to allow a given user to automatically login when they first open FanMaker UI.
