@@ -3,6 +3,7 @@ import SwiftUI
 
 public class FanMakerSDK {
     public static var apiKey : String = ""
+    public static var userID : String = ""
     public static var memberID : String = ""
     public static var studentID : String = ""
     public static var ticketmasterID : String = ""
@@ -21,11 +22,15 @@ public class FanMakerSDK {
         return apiKey != ""
     }
     
+    public static func setUserID(_ value : String) {
+        self.userID = value
+    }
+    
     public static func setMemberID(_ value : String) {
         self.memberID = value
     }
     
-    public static func setStudentId(_ value : String) {
+    public static func setStudentID(_ value : String) {
         self.studentID = value
     }
 
@@ -55,5 +60,18 @@ public class FanMakerSDK {
     
     public static func setLoadingForegroundImage(_ fgImage : UIImage) {
         self.loadingForegroundImage = fgImage
+    }
+    
+    public static func setIdentifiers(fromJSON json : String) {
+        let data : Data? = json.data(using: .utf8)
+        do {
+            let identifiers = try JSONDecoder().decode(FanMakerSDKIdentifiers.self, from: data!)
+            if identifiers.user_id != nil { FanMakerSDK.setUserID(identifiers.user_id!) }
+            if identifiers.member_id != nil { FanMakerSDK.setMemberID(identifiers.member_id!) }
+            if identifiers.student_id != nil { FanMakerSDK.setStudentID(identifiers.student_id!) }
+            if identifiers.ticketmaster_id != nil { FanMakerSDK.setTicketmasterID(identifiers.ticketmaster_id!) }
+            if identifiers.yinzid != nil { FanMakerSDK.setYinzid(identifiers.yinzid!) }
+            if identifiers.push_token != nil { FanMakerSDK.setPushNotificationToken(identifiers.push_token!) }
+        } catch { }
     }
 }

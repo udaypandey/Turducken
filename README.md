@@ -149,7 +149,7 @@ struct ContentView : View {
         Button("Show FanMaker UI", action: {
             // **Note**: Identifiers availability depends on your FanMaker program.
             FanMakerSDK.setMemberID("<memberid>")
-            FanMakerSDK.setStudentId("<studentid>")
+            FanMakerSDK.setStudentID("<studentid>")
             FanMakerSDK.setTicketmasterID("<ticketmasterid>")
             FanMakerSDK.setYinzid("<yinzid>")
             FanMakerSDK.setPushNotificationToken("<pushToken>")
