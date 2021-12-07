@@ -1,6 +1,9 @@
 import Foundation
 import SwiftUI
 
+let FanMakerSDKSessionToken : String = "FanMakerSDKSessionToken"
+let FanMakerSDKJSONIdentifiers : String = "FanMakerSDKJSONIdentifiers"
+
 public class FanMakerSDK {
     public static var apiKey : String = ""
     public static var userID : String = ""
@@ -16,6 +19,13 @@ public class FanMakerSDK {
     public static func initialize(apiKey : String) {
         self.apiKey = apiKey
         self.locationEnabled = false
+        
+        let defaults : UserDefaults = UserDefaults.standard
+        if defaults.string(forKey: FanMakerSDKSessionToken) != nil {
+            if let json = defaults.string(forKey: FanMakerSDKJSONIdentifiers) {
+                FanMakerSDK.setIdentifiers(fromJSON: json)
+            }
+        }
     }
     
     public static func isInitialized() -> Bool {

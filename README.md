@@ -169,6 +169,16 @@ struct ContentView : View {
 }
 ```
 
+**Note**: All of these identifiers, along with the FanMaker's User ID, are automatically defined when a user successfully logins and become accessible via the following public variables:
+
+```
+FanMakerSDK.userID
+FanMakerSDK.memberID
+FanMakerSDK.studentID
+FanMakerSDK.ticketmasterID
+FanMakerSDK.yinzid
+```
+
 ### Location Tracking
 
 FanMaker UI asks for user's permission to track their location the first time it loads. However, location tracking can be enabled/disabled by calling the following static functions:

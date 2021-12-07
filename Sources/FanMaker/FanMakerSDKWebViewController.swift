@@ -67,7 +67,8 @@ public class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHan
                 case "setToken":
                     defaults.set(value, forKey: FanMakerSDKSessionToken)
                 case "setIdentifiers":
-                    print(value)
+                    FanMakerSDK.setIdentifiers(fromJSON: value)
+                    defaults.set(value, forKey: FanMakerSDKJSONIdentifiers)
                 case "requestLocationAuthorization":
                     locationManager.requestWhenInUseAuthorization()
                     locationManager.delegate = locationDelegate
