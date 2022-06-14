@@ -190,3 +190,71 @@ FanMakerSDK.disableLocationTracking()
 // To manually enable location tracking back
 FanMakerSDK.enableLocationTracking()
 ```
+
+### Beacons Tracking
+
+FanMaker SDK allows beacon tracking by implementing the protocol `FanMakerSDKBeaconsManagerDelegate`. This protocol can be implemented in a `UIViewController` subclass (for classic development using a storyboard) class as well as an `ObservableObject` (for SwiftUI development).
+
+Then, you need to declare an instance of `FanMakerSDKBeaconsManager` and assign your delegate to it.
+
+```
+class FanMakerViewModel : NSObject, FanMakerSDKBeaconsManagerDelegate {
+    private let beaconsManager : FanMakerSDKBeaconsManager
+    
+    init() {
+        beaconsManager = FanMakerBeaconsManager()
+        
+        super.init()
+        beaconsManager.delegate = self
+    }
+}
+```
+
+`FanMakerSDKBeaconsManagerDelegate` protocol requires the following functions to be implemented:
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didChangeAuthorization status: FanMakerSDKBeaconsAuthorizationStatus) -> Void
+```
+This function is used to handle the current `FanMakerSDKBeaconsAuthorizationStatus` of your app. The possible enum values are:
+```
+.notDetermined
+.restricted
+.denied
+.authorizedAlways
+.authorizedWhenInUse
+```
+Calling `beaconsManager.requestAuthorization()` will prompt the user to get permissions when necessary and call this function when user gives or denies permission to use iOS Location tracking.
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didReceiveBeaconRegions regions: [FanMakerSDKBeaconRegion]) -> Void
+```
+In order to actually start tracking beacons, you need to call `beaconsManager.fetchBeaconRegions()`. Be sure you have the right permissions before calling this or it won't work. Once beacons are retrieved from FanMaker servers, `didReceiveBeacons` will be called.
+
+**NOTE**: In order to fetch beacons from the API and start tracking them, user needs to be logged into the FanMaker UI before calling this function.
+
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didEnterRegion region: FanMakerSDKBeaconRegion) -> Void
+```
+This function will get called whenever a user walks into a scanned beacon region. 
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didExitRegion region: FanMakerSDKBeaconRegion) -> Void
+```
+This function will get called whenever a user walks out of a scanned beacon region.
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didUpdateBeaconRangeActionsQueue queue: [FanMakerSDKBeaconRangeAction]) -> Void
+```
+This function will get called whenever a user gets a valid beacon signal, which happens approximately once per minute while the user stays in a beacon's range. 
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didFailWithError error: FanMakerSDKBeaconsError) -> Void
+```
+This function will be called whenever something goes wrong.
+Possible enum values for `FanMakerSDKBeaconsError` are:
+```
+.userSessionNotFound
+.serverError
+.unknown
+```
