@@ -261,3 +261,29 @@ Possible enum values for `FanMakerSDKBeaconsError` are:
 .serverError
 .unknown
 ```
+
+### Recomended Entitlements
+
+Bluetooth (required for beacons)
+```
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Enabling blutooth access will allow you to earn points when you come in contact with bluetooth beacons that may be located at the location of an event you are attending. You may also receive exclusive offers and additional point earning opportunities based on your contact with bluetooth beacons always</string>
+	
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Enabling blutooth access will allow you to earn points when you come in contact with bluetooth beacons that may be located at the location of an event you are attending. You may also receive exclusive offers and additional point earning opportunities based on your contact with bluetooth beacons</string>
+```
+
+Location (required)
+```
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>By sharing your location you can automatically earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
+
+<key>NSLocationAlwaysUsageDescription</key>
+<string>By sharing your location you can automatically earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location or when you come in contact with bluetooth beacons</string>
+
+<key>NSLocationUsageDescription</key>
+<string>By sharing your location you can earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>By sharing your location you can earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
+```
