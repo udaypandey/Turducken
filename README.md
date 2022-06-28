@@ -12,6 +12,9 @@ First add the FanMaker SDK to your project as a Swift Package:
 
 ![xcode2](https://user-images.githubusercontent.com/298020/120363926-4c107600-c2d2-11eb-8374-0b7e9cfc21a4.png)
 
+### Sample App
+A sample iOS app utilizing the SDK is available here (https://github.com/FanMaker/TurduckenSampleApp)
+
 ### Initialization
 
 To initialize the SDK you need to pass your `<SDK_KEY>` into the FanMaker SDK initializer. You need to call this code in your `AppDelegate` class as part of your `application didFinishLaunchingWithOptions` callback function. Configuration is a little different depending on what "Life Cycle" are you using.
