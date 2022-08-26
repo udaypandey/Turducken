@@ -53,7 +53,7 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
         
         // SDK Exclusive Token
-        request.setValue("0.1.5", forHTTPHeaderField: "X-FanMaker-SDK-Version")
+        request.setValue("1.0.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
         
         self.webView.load(request)
     }

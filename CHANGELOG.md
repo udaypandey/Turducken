@@ -1,3 +1,5 @@
+### 1.0.1
+SDK was sending the wrong SDK version to the servers
 ### 1.0
 Introducing `FanMakerSDKBeaconsManager` and `FanMakerSDKBeaconsManagerDelegate` to handle FanMaker's Beacons tracking features.
 
