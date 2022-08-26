@@ -12,6 +12,9 @@ First add the FanMaker SDK to your project as a Swift Package:
 
 ![xcode2](https://user-images.githubusercontent.com/298020/120363926-4c107600-c2d2-11eb-8374-0b7e9cfc21a4.png)
 
+### Sample App
+A sample iOS app utilizing the SDK is available here (https://github.com/FanMaker/TurduckenSampleApp)
+
 ### Initialization
 
 To initialize the SDK you need to pass your `<SDK_KEY>` into the FanMaker SDK initializer. You need to call this code in your `AppDelegate` class as part of your `application didFinishLaunchingWithOptions` callback function. Configuration is a little different depending on what "Life Cycle" are you using.
@@ -257,4 +260,30 @@ Possible enum values for `FanMakerSDKBeaconsError` are:
 .userSessionNotFound
 .serverError
 .unknown
+```
+
+### Recomended Entitlements
+
+Bluetooth (required for beacons)
+```
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Enabling blutooth access will allow you to earn points when you come in contact with bluetooth beacons that may be located at the location of an event you are attending. You may also receive exclusive offers and additional point earning opportunities based on your contact with bluetooth beacons always</string>
+	
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Enabling blutooth access will allow you to earn points when you come in contact with bluetooth beacons that may be located at the location of an event you are attending. You may also receive exclusive offers and additional point earning opportunities based on your contact with bluetooth beacons</string>
+```
+
+Location (required)
+```
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>By sharing your location you can automatically earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
+
+<key>NSLocationAlwaysUsageDescription</key>
+<string>By sharing your location you can automatically earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location or when you come in contact with bluetooth beacons</string>
+
+<key>NSLocationUsageDescription</key>
+<string>By sharing your location you can earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>By sharing your location you can earn points for checking in to certain events. You may also receive exclusive offers and additional point earning opportunities based on your location</string>
 ```
