@@ -28,7 +28,6 @@ public struct FanMakerSDKBeaconRangeAction : Codable {
     public var rssi : Int
     public var accuracy : Double
     public var seenAt : Date
-    public var posted : Bool
 
     public func toParams() -> [String : String] {
         return [
@@ -51,7 +50,6 @@ extension FanMakerSDKBeaconRangeAction {
         self.rssi = beacon.rssi
         self.accuracy = beacon.accuracy
         self.seenAt = Date()
-        self.posted = false
         
         switch(beacon.proximity) {
         case .unknown:
@@ -74,8 +72,8 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
     var locationManager : CLLocationManager
     var cachedRegions : [FanMakerSDKBeaconRegion] = []
     
-    private let FanMakerSDKBeaconRangeActionsQueue = "FanMakerSDKBeaconRangeActionsQueue"
-    private let throttling = 60
+    private let FanMakerSDKBeaconRangeActionsHistory = "FanMakerSDKBeaconRangeActionsHistory"
+    private let FanMakerSDKBeaconRangeActionsSendList = "FanMakerSDKBeaconRangeActionsSendList"
     private var timer : Timer?
     
     override public init() {
@@ -84,9 +82,19 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
         self.locationManager.delegate = self
     }
     
-    public func currentBeaconRangeActionsQueue() -> [FanMakerSDKBeaconRangeAction] {
-        guard let data = UserDefaults.standard.data(forKey: FanMakerSDKBeaconRangeActionsQueue) else { return [] }
+    private func getQueue(from key: String) -> [FanMakerSDKBeaconRangeAction] {
+        guard let data = UserDefaults.standard.data(forKey: key) else {
+            return []
+        }
         return (try? PropertyListDecoder().decode([FanMakerSDKBeaconRangeAction].self, from: data)) ?? []
+    }
+    
+    public func rangeActionsHistory() -> [FanMakerSDKBeaconRangeAction] {
+        return getQueue(from: FanMakerSDKBeaconRangeActionsHistory)
+    }
+    
+    public func rangeActionsSendList() -> [FanMakerSDKBeaconRangeAction] {
+        return getQueue(from: FanMakerSDKBeaconRangeActionsSendList)
     }
     
     open func requestAuthorization() {
@@ -95,12 +103,28 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
     
     open func fetchBeaconRegions() {
         guard isUserLogged() else { return fail(with: .userSessionNotFound) }
+        
+        DispatchQueue.global().async {
+            FanMakerSDKHttp.get(path: "site_details/info", model: FanMakerSDKSiteDetailsResponse.self) { result in
+                switch(result) {
+                case .success(let response):
+                    if let beaconUniquenessThrottle = Int(response.data.site_features.beacons.beaconUniquenessThrottle) {
+                        FanMakerSDK.beaconUniquenessThrottle = beaconUniquenessThrottle
+                    }
+                    NSLog("FanMaker Info: Beacon Uniqueness Throttle settled to \(FanMakerSDK.beaconUniquenessThrottle) seconds")
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
+        }
 
         DispatchQueue.global().async {
             FanMakerSDKHttp.get(path: "beacon_regions", model: FanMakerSDKBeaconRegionsResponse.self) { result in
                 switch(result) {
                 case .success(let response):
                     self.cachedRegions = response.data
+                    self.update(rangeActionsHistory: [])
+                    
                     if let delegate = self.delegate {
                         delegate.beaconsManager(self, didReceiveBeaconRegions: self.cachedRegions)
                     }
@@ -114,8 +138,8 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             timer?.invalidate()
             timer = nil
         }
-        timer = Timer.scheduledTimer(withTimeInterval: Double(throttling), repeats: true) { timer in
-            self.postBeaconRangeActionsQueue()
+        timer = Timer.scheduledTimer(withTimeInterval: Double(60), repeats: true) { timer in
+            self.postBeaconRangeActions([])
         }
     }
     
@@ -126,7 +150,7 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
                 var beaconRegion : CLBeaconRegion
                 if let major = CLBeaconMajorValue(region.major) {
                     log("Monitoring for beacon region UUID: \(uuid) Major: \(major)")
-                    beaconRegion = CLBeaconRegion(uuid: uuid, major: major, identifier: region.uuid)
+                    beaconRegion = CLBeaconRegion(uuid: uuid, major: major, identifier: "\(region.uuid)::\(region.major)")
                 } else {
                     log("Monitoring for beacon region UUID: \(uuid)")
                     beaconRegion = CLBeaconRegion(uuid: uuid, identifier: region.uuid)
@@ -166,22 +190,30 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
     }
     
     open func locationManager(_ manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], in region: CLBeaconRegion) {
-        
-        var queue = currentBeaconRangeActionsQueue()
+        var queue = rangeActionsHistory()
+        var newActions : [FanMakerSDKBeaconRangeAction] = []
+
         for beacon in beacons {
             let beaconRangeAction = FanMakerSDKBeaconRangeAction(beacon: beacon)
             if shouldAppend(beaconRangeAction, to: queue) {
                 queue.append(beaconRangeAction)
+                newActions.append(beaconRangeAction)
             }
         }
         
-        if queue.count > currentBeaconRangeActionsQueue().count {
-            update(beaconRangeActionsQueue: queue)
+        if !newActions.isEmpty {
+            update(rangeActionsHistory: queue)
+            postBeaconRangeActions(newActions)
         }
     }
     
     private func getCachedRegion(from identifier: String) -> FanMakerSDKBeaconRegion? {
-        return cachedRegions.first(where: { $0.uuid == identifier })
+        let pieces = identifier.components(separatedBy: "::")
+        let uuid = pieces[0]
+        let major = pieces[1]
+
+        // This works because FanMakerSDKBeaconRegion's major defaults to "" when none is provided
+        return cachedRegions.first(where: { $0.uuid == uuid && $0.major == major })
     }
     
     private func isUserLogged() -> Bool {
@@ -233,69 +265,53 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             }
         }
     }
-
-    private func update(beaconRangeActionsQueue queue: [FanMakerSDKBeaconRangeAction]) {
-        let queue : [FanMakerSDKBeaconRangeAction] = queue.suffix(1000)
-        
-        UserDefaults.standard.set(try? PropertyListEncoder().encode(queue), forKey: FanMakerSDKBeaconRangeActionsQueue)
-        
+    
+    private func update(rangeActionsHistory queue: [FanMakerSDKBeaconRangeAction]) {
+        let newQueue = update(queueName: FanMakerSDKBeaconRangeActionsHistory, queueContent: queue)
         if let delegate = self.delegate {
-            delegate.beaconsManager(self, didUpdateBeaconRangeActionsQueue: queue)
+            delegate.beaconsManager(self, didUpdateBeaconRangeActionsHistory: newQueue)
         }
     }
     
-    private func postBeaconRangeActionsQueue() {
-        let queue = currentBeaconRangeActionsQueue()
+    private func update(rangeActionsSendList queue: [FanMakerSDKBeaconRangeAction]) {
+        let newQueue = update(queueName: FanMakerSDKBeaconRangeActionsSendList, queueContent: queue)
+        if let delegate = self.delegate {
+            delegate.beaconsManager(self, didUpdateBeaconRangeActionsSendList: newQueue)
+        }
+    }
+    
+    private func update(queueName: String, queueContent beacons: [FanMakerSDKBeaconRangeAction]) -> [FanMakerSDKBeaconRangeAction] {
+        let beacons : [FanMakerSDKBeaconRangeAction] = beacons.suffix(1000)
+        let encodedBeacons = try? PropertyListEncoder().encode(beacons.suffix(1000))
+        UserDefaults.standard.set(encodedBeacons, forKey: queueName)
+        
+        return beacons
+    }
+    
+    private func postBeaconRangeActions(_ actions: [FanMakerSDKBeaconRangeAction]) {
+        let queue = rangeActionsSendList() + actions
         if (queue.isEmpty) { return }
         
-        var foundPending : Bool = false
-        var first : [FanMakerSDKBeaconRangeAction] = []
-        var middle : [FanMakerSDKBeaconRangeAction] = []
-        var last : [FanMakerSDKBeaconRangeAction] = []
-        
-        for action in queue {
-            if foundPending {
-                if middle.count < 10 {
-                    middle.append(action)
-                } else {
-                    last.append(action)
-                }
-            } else {
-                if action.posted {
-                    first.append(action)
-                } else {
-                    foundPending = true
-                    middle.append(action)
-                }
-            }
-        }
-        if middle.isEmpty { return }
-        
-        let body : [String : [[String : String]]] = ["beacons" : middle.map { $0.toParams() }]
-    
+        let body : [String : [[String : String]]] = ["beacons" : queue.map { $0.toParams() }]
         FanMakerSDKHttp.post(path: "beacon_range_actions", body: body) { result in
             switch(result) {
             case .success:
-                middle = middle.map {
-                    var action = $0
-                    action.posted = true
-                    return action
-                }
-                
-                let newQueue = first + middle + last
-                self.update(beaconRangeActionsQueue: newQueue)
+                self.update(rangeActionsSendList: [])
+                self.log("\(actions.count) beacon range actions successfully posted")
             case .failure:
-                self.log("Network error")
+                self.update(rangeActionsSendList: queue)
+                self.log("\(actions.count) beacon range actions added to the send list")
             }
         }
     }
     
     private func shouldAppend(_ beaconRangeAction: FanMakerSDKBeaconRangeAction, to queue: [FanMakerSDKBeaconRangeAction]) -> Bool {
-        
         guard let lastAction = queue.filter({ queueAction in
-            queueAction.uuid == beaconRangeAction.uuid && queueAction.minor == beaconRangeAction.minor
+            queueAction.uuid == beaconRangeAction.uuid &&
+                queueAction.major == beaconRangeAction.major &&
+                queueAction.minor == beaconRangeAction.minor
         }).last else { return true }
         
-        return Date().timeIntervalSince(lastAction.seenAt) >= Double(throttling)
+        return Date().timeIntervalSince(lastAction.seenAt) >= Double(FanMakerSDK.beaconUniquenessThrottle)
     }
 }

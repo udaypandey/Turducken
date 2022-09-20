@@ -247,9 +247,14 @@ func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didExitRegion region: 
 This function will get called whenever a user walks out of a scanned beacon region.
 
 ```
-func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didUpdateBeaconRangeActionsQueue queue: [FanMakerSDKBeaconRangeAction]) -> Void
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didUpdateBeaconRangeActionsHistory queue: [FanMakerSDKBeaconRangeAction]) -> Void
 ```
-This function will get called whenever a user gets a valid beacon signal, which happens approximately once per minute while the user stays in a beacon's range. 
+This function will get called whenever a user gets a valid beacon signal, which happens approximately once per minute while the user stays in a beacon's range. The time interval is customizable via the API
+
+```
+func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didUpdateBeaconRangeActionsSendList queue: [FanMakerSDKBeaconRangeAction]) -> Void
+```
+This function will get called whenever a valid beacon signal fails to get posted to the FanMaker servers. This may happen because of weak or failing internet connection, temporarily server errors, etc. The SDK will retry to send this queue every minute and, once it get posted successfully, this queue will be emptied and this function will be called with an empty array.  
 
 ```
 func beaconsManager(_ manager: FanMakerSDKBeaconsManager, didFailWithError error: FanMakerSDKBeaconsError) -> Void

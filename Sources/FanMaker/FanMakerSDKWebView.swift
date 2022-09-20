@@ -26,6 +26,10 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
                 switch(result) {
                 case .success(let response):
                     urlString = response.data.sdk_url
+                    if let beaconUniquenessThrottle = Int(response.data.site_features.beacons.beaconUniquenessThrottle) {
+                        FanMakerSDK.beaconUniquenessThrottle = beaconUniquenessThrottle
+                    }
+                    NSLog("FanMaker Info: Beacon Uniqueness Throttle settled to \(FanMakerSDK.beaconUniquenessThrottle) seconds")
                 case .failure(let error):
                     print(error.localizedDescription)
                     urlString = "https://admin.fanmaker.com/500"
@@ -53,7 +57,7 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
         
         // SDK Exclusive Token
-        request.setValue("1.0.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
+        request.setValue("1.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
         
         self.webView.load(request)
     }

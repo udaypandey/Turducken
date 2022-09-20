@@ -7,9 +7,18 @@
 
 import Foundation
 
+public struct FanMakerSDKBeacons : Decodable {
+    public let beaconUniquenessThrottle : String
+}
+
+public struct FanMakerSDKSiteFeatures : Decodable {
+    public let beacons : FanMakerSDKBeacons
+}
+
 public struct FanMakerSDKSiteDetails : Decodable {
     public let canonical_url : String
     public let sdk_url : String
+    public let site_features : FanMakerSDKSiteFeatures
 }
 
 public struct FanMakerSDKSiteDetailsResponse : FanMakerSDKHttpResponse {

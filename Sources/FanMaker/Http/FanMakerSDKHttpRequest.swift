@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Érik Escobedo on 24/05/21.
 //
@@ -27,7 +27,7 @@ public struct FanMakerSDKHttpRequest {
             return
         }
         
-        request.setValue("1.0.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
+        request.setValue("1.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
         do {
             switch method {
             case "GET":
@@ -73,8 +73,17 @@ public struct FanMakerSDKHttpRequest {
                             onCompletion(.failure(FanMakerSDKHttpError(httpCode: jsonResponse.status, message: jsonResponse.message)))
                         }
                     case "POST":
-                        let response = FanMakerSDKPostResponse(status: 200, message: "", data: "")
-                        onCompletion(.success(response as! HttpResponse))
+                        if data.count <= 1 {
+                            let response = FanMakerSDKPostResponse(status: 200, message: "", data: "")
+                            onCompletion(.success(response as! HttpResponse))
+                        } else {
+                            let jsonResponse = try JSONDecoder().decode(model.self, from: data)
+                            if jsonResponse.status >= 200 && jsonResponse.status < 300 {
+                                onCompletion(.success(jsonResponse))
+                            } else {
+                                onCompletion(.failure(FanMakerSDKHttpError(httpCode: jsonResponse.status, message: jsonResponse.message)))
+                            }
+                        }
                     default:
                         onCompletion(.failure(FanMakerSDKHttpError(code: .badHttpMethod, message: method)))
                     }

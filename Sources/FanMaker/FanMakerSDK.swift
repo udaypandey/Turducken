@@ -16,6 +16,8 @@ public class FanMakerSDK {
     public static var loadingBackgroundColor : UIColor = UIColor.white
     public static var loadingForegroundImage : UIImage? = nil
     
+    public static var beaconUniquenessThrottle : Int = 60
+    
     public static func initialize(apiKey : String) {
         self.apiKey = apiKey
         self.locationEnabled = false
