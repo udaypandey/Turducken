@@ -11,7 +11,7 @@ public struct FanMakerSDKHttpRequest {
     public static let host : String = "https://api.fanmaker.com/api/v2"
     public let urlString : String
     private var request : URLRequest? = nil
-    
+
     init(path: String) {
         self.urlString = "\(FanMakerSDKHttpRequest.host)/\(path)"
 
@@ -19,15 +19,15 @@ public struct FanMakerSDKHttpRequest {
             self.request = URLRequest(url: url)
         }
     }
-    
+
     func request<HttpResponse : FanMakerSDKHttpResponse>(method: String, body: Any, model: HttpResponse.Type, onCompletion: @escaping (Result<HttpResponse, FanMakerSDKHttpError>) -> Void) {
-        
+
         guard var request = self.request else {
             onCompletion(.failure(FanMakerSDKHttpError(code: .badUrl, message: self.urlString)))
             return
         }
-        
-        request.setValue("1.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
+
+        request.setValue("1.1.2", forHTTPHeaderField: "X-FanMaker-SDK-Version")
         do {
             switch method {
             case "GET":
@@ -50,18 +50,18 @@ public struct FanMakerSDKHttpRequest {
         } catch let jsonError as NSError {
             onCompletion(.failure(FanMakerSDKHttpError(code: .badData, message: jsonError.localizedDescription)))
         }
-        
+
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             guard error == nil else {
                 onCompletion(.failure(FanMakerSDKHttpError(code: .unknown, message: "Unknow error")))
                 return
             }
-            
+
             guard let httpResponse : HTTPURLResponse = response as? HTTPURLResponse, let data = data else {
                 onCompletion(.failure(FanMakerSDKHttpError(code: .badResponse, message: "Invalid HTTP Response")))
                 return
             }
-            
+
             if httpResponse.statusCode == 200 {
                 do {
                     switch method {
@@ -87,7 +87,7 @@ public struct FanMakerSDKHttpRequest {
                     default:
                         onCompletion(.failure(FanMakerSDKHttpError(code: .badHttpMethod, message: method)))
                     }
-                    
+
                 } catch let jsonError as NSError {
                     onCompletion(.failure(FanMakerSDKHttpError(code: .badResponse, message: jsonError.localizedDescription)))
                 }

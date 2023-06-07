@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Érik Escobedo on 28/05/21.
 //
@@ -16,9 +16,9 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
 
     public init(configuration: WKWebViewConfiguration) {
         self.webView = WKWebView(frame: .zero, configuration: configuration)
-        
+
         let path = "site_details/info"
-        
+
         let semaphore = DispatchSemaphore(value: 0)
         var urlString : String = ""
         DispatchQueue.global().async {
@@ -38,10 +38,10 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
             }
         }
         semaphore.wait()
-        
+
         self.urlString = urlString
     }
-    
+
     public func prepareUIView() {
         let url : URL? = URL(string: self.urlString)
         var request : URLRequest = URLRequest(url: url!)
@@ -55,18 +55,18 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.ticketmasterID, forHTTPHeaderField: "X-Ticketmaster-ID")
         request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
         request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
-        
+
         // SDK Exclusive Token
-        request.setValue("1.1", forHTTPHeaderField: "X-FanMaker-SDK-Version")
-        
+        request.setValue("1.1.2", forHTTPHeaderField: "X-FanMaker-SDK-Version")
+
         self.webView.load(request)
     }
-    
+
     public func makeUIView(context: Context) -> some UIView {
         prepareUIView()
         return self.webView
     }
-    
+
     public func updateUIView(_ uiView: UIViewType, context: Context) {
         //
     }

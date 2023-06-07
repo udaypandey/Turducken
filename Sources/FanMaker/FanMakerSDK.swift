@@ -15,13 +15,13 @@ public class FanMakerSDK {
     public static var locationEnabled : Bool = false
     public static var loadingBackgroundColor : UIColor = UIColor.white
     public static var loadingForegroundImage : UIImage? = nil
-    
+
     public static var beaconUniquenessThrottle : Int = 60
-    
+
     public static func initialize(apiKey : String) {
         self.apiKey = apiKey
         self.locationEnabled = false
-        
+
         let defaults : UserDefaults = UserDefaults.standard
         if defaults.string(forKey: FanMakerSDKSessionToken) != nil {
             if let json = defaults.string(forKey: FanMakerSDKJSONIdentifiers) {
@@ -29,19 +29,19 @@ public class FanMakerSDK {
             }
         }
     }
-    
+
     public static func isInitialized() -> Bool {
         return apiKey != ""
     }
-    
+
     public static func setUserID(_ value : String) {
         self.userID = value
     }
-    
+
     public static func setMemberID(_ value : String) {
         self.memberID = value
     }
-    
+
     public static func setStudentID(_ value : String) {
         self.studentID = value
     }
@@ -49,31 +49,46 @@ public class FanMakerSDK {
     public static func setTicketmasterID(_ value : String) {
         self.ticketmasterID = value
     }
-    
+
     public static func setYinzid(_ value : String) {
         self.yinzid = value
     }
-    
+
     public static func setPushNotificationToken(_ value : String) {
         self.pushToken = value
     }
-    
+
     public static func enableLocationTracking() {
         self.locationEnabled = true
     }
-    
+
     public static func disableLocationTracking() {
         self.locationEnabled = false
     }
-    
+
     public static func setLoadingBackgroundColor(_ bgColor : UIColor) {
         self.loadingBackgroundColor = bgColor
     }
-    
+
     public static func setLoadingForegroundImage(_ fgImage : UIImage) {
         self.loadingForegroundImage = fgImage
     }
-    
+
+    public static func sdkOpenUrl(scheme : String) {
+        if let url = URL(string: scheme) {
+            if #available(iOS 10, *) {
+                UIApplication.shared.open(url, options: [:],
+                completionHandler: {
+                    (success) in
+                        print("Open \(scheme): \(success)")
+                })
+            } else {
+                let success = UIApplication.shared.openURL(url)
+                print("Open \(scheme): \(success)")
+            }
+        }
+    }
+
     public static func setIdentifiers(fromJSON json : String) {
         let data : Data? = json.data(using: .utf8)
         do {
