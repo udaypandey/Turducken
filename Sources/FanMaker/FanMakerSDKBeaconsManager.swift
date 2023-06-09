@@ -50,7 +50,7 @@ extension FanMakerSDKBeaconRangeAction {
         self.rssi = beacon.rssi
         self.accuracy = beacon.accuracy
         self.seenAt = Date()
-        
+
         switch(beacon.proximity) {
         case .unknown:
             self.proximity = "unknown"
@@ -67,43 +67,43 @@ extension FanMakerSDKBeaconRangeAction {
 }
 
 open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
-    
+
     weak open var delegate: FanMakerSDKBeaconsManagerDelegate?
     var locationManager : CLLocationManager
     var cachedRegions : [FanMakerSDKBeaconRegion] = []
-    
+
     private let FanMakerSDKBeaconRangeActionsHistory = "FanMakerSDKBeaconRangeActionsHistory"
     private let FanMakerSDKBeaconRangeActionsSendList = "FanMakerSDKBeaconRangeActionsSendList"
     private var timer : Timer?
-    
+
     override public init() {
         self.locationManager = CLLocationManager()
         super.init()
         self.locationManager.delegate = self
     }
-    
+
     private func getQueue(from key: String) -> [FanMakerSDKBeaconRangeAction] {
         guard let data = UserDefaults.standard.data(forKey: key) else {
             return []
         }
         return (try? PropertyListDecoder().decode([FanMakerSDKBeaconRangeAction].self, from: data)) ?? []
     }
-    
+
     public func rangeActionsHistory() -> [FanMakerSDKBeaconRangeAction] {
         return getQueue(from: FanMakerSDKBeaconRangeActionsHistory)
     }
-    
+
     public func rangeActionsSendList() -> [FanMakerSDKBeaconRangeAction] {
         return getQueue(from: FanMakerSDKBeaconRangeActionsSendList)
     }
-    
+
     open func requestAuthorization() {
         locationManager.requestAlwaysAuthorization()
     }
-    
+
     open func fetchBeaconRegions() {
         guard isUserLogged() else { return fail(with: .userSessionNotFound) }
-        
+
         DispatchQueue.global().async {
             FanMakerSDKHttp.get(path: "site_details/info", model: FanMakerSDKSiteDetailsResponse.self) { result in
                 switch(result) {
@@ -122,18 +122,18 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             FanMakerSDKHttp.get(path: "beacon_regions", model: FanMakerSDKBeaconRegionsResponse.self) { result in
                 switch(result) {
                 case .success(let response):
-                    self.cachedRegions = response.data
+                    // self.cachedRegions = response.data
                     self.update(rangeActionsHistory: [])
-                    
+
                     if let delegate = self.delegate {
-                        delegate.beaconsManager(self, didReceiveBeaconRegions: self.cachedRegions)
+                        delegate.beaconsManager(self, didReceiveBeaconRegions: response.data)
                     }
                 case .failure(let error):
                     NSLog(error.localizedDescription)
                 }
             }
         }
-        
+
         if timer != nil {
             timer?.invalidate()
             timer = nil
@@ -142,9 +142,11 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             self.postBeaconRangeActions([])
         }
     }
-    
+
     open func startScanning(_ regions: [FanMakerSDKBeaconRegion]) {
         stopScanning()
+
+        cachedRegions = regions
         for region in regions {
             if let uuid = UUID(uuidString: region.uuid) {
                 var beaconRegion : CLBeaconRegion
@@ -155,40 +157,64 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
                     log("Monitoring for beacon region UUID: \(uuid)")
                     beaconRegion = CLBeaconRegion(uuid: uuid, identifier: region.uuid)
                 }
-                
+
                 locationManager.startMonitoring(for: beaconRegion)
             }
         }
     }
-    
+
     open func stopScanning() {
         for region in locationManager.monitoredRegions {
-            locationManager.stopMonitoring(for: region)
+            // The region was found using getCachedRegion, so stop monitoring for it
+            if getCachedRegion(from: region.identifier) != nil {
+                locationManager.stopMonitoring(for: region)
+            }
         }
+
+        cachedRegions.removeAll()
     }
-    
+
     open func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if let delegate = self.delegate {
             delegate.beaconsManager(self, didChangeAuthorization: FanMakerSDKBeaconsAuthorizationStatus.init(rawValue: status.rawValue)!)
         }
     }
-    
+
     open func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        postRegionAction(region_identifier: region.identifier, action: "enter") { delegate, fmRegion in
-            delegate.beaconsManager(self, didEnterRegion: fmRegion)
-            self.log("Start ranging beacons for Region \(fmRegion)")
-            manager.startRangingBeacons(satisfying: fmRegion.constraint()!)
+        guard let fmRegion = getCachedRegion(from: region.identifier) else {
+            log("NON-FanMaker beacon region. Halting FanMaker didEnterRegion for UUID: \(region.identifier)")
+            return
+        }
+
+        do {
+            try postRegionAction(region_identifier: region.identifier, action: "enter") { delegate, fmRegion in
+                delegate.beaconsManager(self, didEnterRegion: fmRegion)
+                self.log("Start ranging beacons for FanMaker Region \(fmRegion)")
+                manager.startRangingBeacons(satisfying: fmRegion.constraint()!)
+            }
+        } catch {
+            log("\(error)")
         }
     }
-    
+
     open func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        postRegionAction(region_identifier: region.identifier, action: "exit") { delegate, fmRegion in
-            delegate.beaconsManager(self, didExitRegion: fmRegion)
-            self.log("Stop ranging beacons for Region \(fmRegion)")
-            manager.stopRangingBeacons(satisfying: fmRegion.constraint()!)
+        // Check if the exited region is one we initialized
+        guard let fmRegion = getCachedRegion(from: region.identifier) else {
+            log("NON-FanMaker beacon region. Halting FanMaker didExitRegion for UUID: \(region.identifier)")
+            return
+        }
+
+        do {
+            try postRegionAction(region_identifier: region.identifier, action: "exit") { delegate, fmRegion in
+                delegate.beaconsManager(self, didExitRegion: fmRegion)
+                self.log("Stop ranging beacons for FanMaker Region \(fmRegion)")
+                manager.stopRangingBeacons(satisfying: fmRegion.constraint()!)
+            }
+        } catch {
+            log("\(error)")
         }
     }
-    
+
     open func locationManager(_ manager: CLLocationManager, didRangeBeacons beacons: [CLBeacon], in region: CLBeaconRegion) {
         var queue = rangeActionsHistory()
         var newActions : [FanMakerSDKBeaconRangeAction] = []
@@ -200,13 +226,13 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
                 newActions.append(beaconRangeAction)
             }
         }
-        
+
         if !newActions.isEmpty {
             update(rangeActionsHistory: queue)
             postBeaconRangeActions(newActions)
         }
     }
-    
+
     private func getCachedRegion(from identifier: String) -> FanMakerSDKBeaconRegion? {
         let pieces = identifier.components(separatedBy: "::")
         let uuid = pieces[0]
@@ -215,7 +241,7 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
         // This works because FanMakerSDKBeaconRegion's major defaults to "" when none is provided
         return cachedRegions.first(where: { $0.uuid == uuid && $0.major == major })
     }
-    
+
     private func isUserLogged() -> Bool {
         let defaults = UserDefaults.standard
 
@@ -225,33 +251,32 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
           return false
         }
     }
-    
+
     private func fail(with error: FanMakerSDKBeaconsError) -> Void {
         if error == .userSessionNotFound {
             stopScanning()
         }
-        
+
         if let delegate = self.delegate {
             delegate.beaconsManager(self, didFailWithError: error)
         }
     }
-    
+
     private func log(_ message: Any) {
         NSLog("FanMaker (Beacons): \(message)")
     }
-    
+
     private func postRegionAction(region_identifier: String, action: String, onCompletion: @escaping (FanMakerSDKBeaconsManagerDelegate, FanMakerSDKBeaconRegion) -> Void) {
         guard let fmRegion = getCachedRegion(from: region_identifier) else {
-            log("\(action.uppercased()) NON-FanMaker beacon region")
-            log("UUID: \(region_identifier)")
+            log("\(action.uppercased()) NON-FanMaker beacon region. Halting FanMaker postRegionAction for UUID: \(region_identifier)")
             return
         }
-        
+
         let body : [String : String] = [
             "beacon_region_id" : String(fmRegion.id),
             "action_type": action
         ]
-        
+
         FanMakerSDKHttp.post(path: "beacon_region_actions", body: body) { result in
             if let delegate = self.delegate {
                 switch(result) {
@@ -265,33 +290,33 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             }
         }
     }
-    
+
     private func update(rangeActionsHistory queue: [FanMakerSDKBeaconRangeAction]) {
         let newQueue = update(queueName: FanMakerSDKBeaconRangeActionsHistory, queueContent: queue)
         if let delegate = self.delegate {
             delegate.beaconsManager(self, didUpdateBeaconRangeActionsHistory: newQueue)
         }
     }
-    
+
     private func update(rangeActionsSendList queue: [FanMakerSDKBeaconRangeAction]) {
         let newQueue = update(queueName: FanMakerSDKBeaconRangeActionsSendList, queueContent: queue)
         if let delegate = self.delegate {
             delegate.beaconsManager(self, didUpdateBeaconRangeActionsSendList: newQueue)
         }
     }
-    
+
     private func update(queueName: String, queueContent beacons: [FanMakerSDKBeaconRangeAction]) -> [FanMakerSDKBeaconRangeAction] {
         let beacons : [FanMakerSDKBeaconRangeAction] = beacons.suffix(1000)
         let encodedBeacons = try? PropertyListEncoder().encode(beacons.suffix(1000))
         UserDefaults.standard.set(encodedBeacons, forKey: queueName)
-        
+
         return beacons
     }
-    
+
     private func postBeaconRangeActions(_ actions: [FanMakerSDKBeaconRangeAction]) {
         let queue = rangeActionsSendList() + actions
         if (queue.isEmpty) { return }
-        
+
         let body : [String : [[String : String]]] = ["beacons" : queue.map { $0.toParams() }]
         FanMakerSDKHttp.post(path: "beacon_range_actions", body: body) { result in
             switch(result) {
@@ -304,14 +329,14 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             }
         }
     }
-    
+
     private func shouldAppend(_ beaconRangeAction: FanMakerSDKBeaconRangeAction, to queue: [FanMakerSDKBeaconRangeAction]) -> Bool {
         guard let lastAction = queue.filter({ queueAction in
             queueAction.uuid == beaconRangeAction.uuid &&
                 queueAction.major == beaconRangeAction.major &&
                 queueAction.minor == beaconRangeAction.minor
         }).last else { return true }
-        
+
         return Date().timeIntervalSince(lastAction.seenAt) >= Double(FanMakerSDK.beaconUniquenessThrottle)
     }
 }
