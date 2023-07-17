@@ -148,7 +148,7 @@ struct ContentView : View {
     var body : some View {
         // FanMakerUI initialization
         let fanMakerUI = FanMakerSDKWebViewController()
-        
+
         Button("Show FanMaker UI", action: {
             // **Note**: Identifiers availability depends on your FanMaker program.
             FanMakerSDK.setMemberID("<memberid>")
@@ -156,7 +156,7 @@ struct ContentView : View {
             FanMakerSDK.setTicketmasterID("<ticketmasterid>")
             FanMakerSDK.setYinzid("<yinzid>")
             FanMakerSDK.setPushNotificationToken("<pushToken>")
-            
+
             // Enable Location Tracking (Permissions should be previously asked by your app)
             FanMakerSDK.enableLocationTracking()
 
@@ -180,6 +180,26 @@ FanMakerSDK.memberID
 FanMakerSDK.studentID
 FanMakerSDK.ticketmasterID
 FanMakerSDK.yinzid
+```
+
+**Note**: It is also possible to pass arbitrary identifiers through the use of a dictionary. This would be done in the same place as you would pass a standard custom identifier above, so please reference that section for more details.
+
+```
+...
+Button("Show FanMaker UI", action: {
+    ...
+    FanMakerSDK.setMemberID("<memberid>")
+
+    let arbitraryIdentifiers: [String: Any] = [
+        "nfl_oidc": "1234-nfl-oidc",
+    ]
+
+    FanMakerSDK.setFanMakerIdentifiers(dictionary: arbitraryIdentifiers)
+
+    ...
+})
+...
+
 ```
 
 ### Location Tracking

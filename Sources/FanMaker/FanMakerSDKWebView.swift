@@ -56,6 +56,19 @@ public struct FanMakerSDKWebView : UIViewRepresentable {
         request.setValue(FanMakerSDK.yinzid, forHTTPHeaderField: "X-Yinzid")
         request.setValue(FanMakerSDK.pushToken, forHTTPHeaderField: "X-PushNotification-Token")
 
+        let jsonFanmakerIdentifiers: Data
+        do {
+            jsonFanmakerIdentifiers = try JSONSerialization.data(withJSONObject: FanMakerSDK.fanmakerIdentifierLexicon)
+        } catch {
+            print("Error converting dictionary to JSON: \(error)")
+            return
+        }
+
+        // Convert the JSON data to a string
+        let jsonString = String(data: jsonFanmakerIdentifiers, encoding: .utf8)
+        // Set the JSON string as the value for the HTTP header field
+        request.setValue(jsonString, forHTTPHeaderField: "X-Fanmaker-Identifiers")
+
         // SDK Exclusive Token
         request.setValue("1.1.2", forHTTPHeaderField: "X-FanMaker-SDK-Version")
 

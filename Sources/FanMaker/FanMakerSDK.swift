@@ -12,6 +12,7 @@ public class FanMakerSDK {
     public static var ticketmasterID : String = ""
     public static var yinzid : String = ""
     public static var pushToken : String = ""
+    public static var fanmakerIdentifierLexicon: [String: Any] = [:]
     public static var locationEnabled : Bool = false
     public static var loadingBackgroundColor : UIColor = UIColor.white
     public static var loadingForegroundImage : UIImage? = nil
@@ -58,6 +59,18 @@ public class FanMakerSDK {
         self.pushToken = value
     }
 
+    public static func setFanMakerIdentifiers(dictionary: [String: Any] = [:]) -> [String: Any] {
+        var idLexicon = (self.fanmakerIdentifierLexicon as? [String: Any]) ?? [:]
+
+        for key in dictionary.keys {
+            idLexicon[key] = dictionary[key]
+        }
+
+        self.fanmakerIdentifierLexicon = idLexicon
+
+        return self.fanmakerIdentifierLexicon as? [String: Any] ?? [:]
+    }
+
     public static func enableLocationTracking() {
         self.locationEnabled = true
     }
@@ -73,6 +86,7 @@ public class FanMakerSDK {
     public static func setLoadingForegroundImage(_ fgImage : UIImage) {
         self.loadingForegroundImage = fgImage
     }
+
 
     public static func sdkOpenUrl(scheme : String) {
         if let url = URL(string: scheme) {
@@ -99,6 +113,7 @@ public class FanMakerSDK {
             if identifiers.ticketmaster_id != nil { FanMakerSDK.setTicketmasterID(identifiers.ticketmaster_id!) }
             if identifiers.yinzid != nil { FanMakerSDK.setYinzid(identifiers.yinzid!) }
             if identifiers.push_token != nil { FanMakerSDK.setPushNotificationToken(identifiers.push_token!) }
+            if identifiers.fanmaker_identifiers != nil { FanMakerSDK.setFanMakerIdentifiers(dictionary: identifiers.fanmaker_identifiers!) }
         } catch { }
     }
 }
