@@ -71,6 +71,7 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
     weak open var delegate: FanMakerSDKBeaconsManagerDelegate?
     var locationManager : CLLocationManager
     var cachedRegions : [FanMakerSDKBeaconRegion] = []
+    private let cachedRegionsQueue = DispatchQueue(label: "com.fanmaker.FanMakerSDK.cachedRegionsQueue")
 
     private let FanMakerSDKBeaconRangeActionsHistory = "FanMakerSDKBeaconRangeActionsHistory"
     private let FanMakerSDKBeaconRangeActionsSendList = "FanMakerSDKBeaconRangeActionsSendList"
@@ -146,7 +147,9 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
     open func startScanning(_ regions: [FanMakerSDKBeaconRegion]) {
         stopScanning()
 
-        cachedRegions = regions
+        cachedRegionsQueue.async {
+            self.cachedRegions = regions
+        }
         for region in regions {
             if let uuid = UUID(uuidString: region.uuid) {
                 var beaconRegion : CLBeaconRegion
@@ -171,7 +174,9 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
             }
         }
 
-        cachedRegions.removeAll()
+        cachedRegionsQueue.async {
+            self.cachedRegions.removeAll()
+        }
     }
 
     open func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
@@ -228,17 +233,22 @@ open class FanMakerSDKBeaconsManager : NSObject, CLLocationManagerDelegate {
         }
 
         if !newActions.isEmpty {
-            update(rangeActionsHistory: queue)
-            postBeaconRangeActions(newActions)
+            cachedRegionsQueue.async {
+                self.update(rangeActionsHistory: queue)
+                self.postBeaconRangeActions(newActions)
+            }
         }
     }
 
     private func getCachedRegion(from identifier: String) -> FanMakerSDKBeaconRegion? {
         let pieces = identifier.components(separatedBy: "::")
-        let uuid = pieces[0]
-        let major = pieces[1]
+        guard pieces.count >= 1 else { return nil }
 
-        // This works because FanMakerSDKBeaconRegion's major defaults to "" when none is provided
+        let uuid = pieces[0]
+        let major: String
+        if pieces.count >= 2 { major = pieces[1] }
+        else { major = "" }
+
         return cachedRegions.first(where: { $0.uuid == uuid && $0.major == major })
     }
 
