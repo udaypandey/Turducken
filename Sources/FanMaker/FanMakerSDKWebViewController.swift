@@ -41,14 +41,21 @@ open class FanMakerSDKWebViewController : UIViewController, WKScriptMessageHandl
             loadingAnimation.image = fgImage
         } else {
             var images : [UIImage] = []
-            for index in 0...29 {
-                if let path = Bundle.module.path(forResource: "fanmaker-sdk-loading-\(index)", ofType: "png") {
-                    if let image = UIImage(contentsOfFile: path) {
-                        images.append(image)
+            
+            // TODO: Uday: The logic here should handle pods vs swift packages way of accessing
+            // resources. This has been edited to work for pods right now
+            let podBundle = Bundle(for: Self.self)
+            if let resourceBundlePath = podBundle.path(forResource: "FanMaker", ofType: "bundle"),
+               let resourceBundle = Bundle(path: resourceBundlePath) {
+                for index in 0...29 {
+                    if let path = resourceBundle.path(forResource: "fanmaker-sdk-loading-\(index)", ofType: "png") {
+                        if let image = UIImage(contentsOfFile: path) {
+                            images.append(image)
+                        }
                     }
                 }
+                loadingAnimation.image = UIImage.animatedImage(with: images, duration: 1.0)
             }
-            loadingAnimation.image = UIImage.animatedImage(with: images, duration: 1.0)
         }
 
         self.view.addSubview(loadingAnimation)
